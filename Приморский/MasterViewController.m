@@ -17,6 +17,7 @@
 #import "UIImageView+AFNetworking.h"
 #import "NewsTableViewCell.h"
 #import "NSDate+HumanizedTime.h"
+#import "NewsDetailsVC.h"
 
 @interface MasterViewController () <MWFeedParserDelegate> {
     MWFeedParser *feedParser;
@@ -54,12 +55,18 @@
     [refreshControl addTarget:self action:@selector(refreshAction) forControlEvents:UIControlEventAllEvents];
     self.refreshControl = refreshControl;
     
-    self.hud = [MBProgressHUD showHUDAddedTo:self.view animated:YES];
+    self.hud = [[MBProgressHUD alloc]initWithView:self.view];
     
-    [self downloadAndParseData];
+//    [self downloadAndParseData];
+    [self loadNext];
 }
 
-
+- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(NSIndexPath *)sender {
+    if ([segue.identifier isEqualToString:@"ShowDetailsSegue"]) {
+        NewsDetailsVC *controller = segue.destinationViewController;
+        controller.news = self.newsToShow[sender.row];
+    }
+}
 
 #pragma mark - Table View
 
@@ -117,7 +124,9 @@
     }
 }
 
-
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
+    [self performSegueWithIdentifier:@"ShowDetailsSegue" sender:indexPath];
+}
 
 
 #pragma mark - feed parser delegates

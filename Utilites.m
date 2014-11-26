@@ -81,7 +81,9 @@
             news.imageURL = [feedItem.enclosures firstObject][@"url"];
         }
     }
-    
+    if (feedItem.link) {
+        news.websiteLink = feedItem.link;
+    }
     
 }
 

@@ -11,9 +11,10 @@
         <attribute name="imageURL" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="subtitle" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="title" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="websiteLink" optional="YES" attributeType="String" syncable="YES"/>
     </entity>
     <elements>
-        <element name="News" positionX="-63" positionY="-18" width="128" height="120"/>
-        <element name="Message" positionX="-236" positionY="-18" width="128" height="88"/>
+        <element name="Message" positionX="-236" positionY="-18" width="128" height="90"/>
+        <element name="News" positionX="-63" positionY="-18" width="128" height="135"/>
     </elements>
 </model>
