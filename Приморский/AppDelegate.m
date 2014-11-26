@@ -27,6 +27,7 @@
     
     NSLog(@"Documents directory %@",[[NSBundle mainBundle] URLForResource:@"MainModel" withExtension:@"momd"]);
     return YES;
+    
 }
 
 - (void)applicationWillResignActive:(UIApplication *)application {

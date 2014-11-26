@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>IDESourceControlProjectFavoriteDictionaryKey</key>
+	<false/>
+	<key>IDESourceControlProjectIdentifier</key>
+	<string>726EBA51-F857-4FFC-8E19-74317D4190BC</string>
+	<key>IDESourceControlProjectName</key>
+	<string>Приморский</string>
+	<key>IDESourceControlProjectOriginsDictionary</key>
+	<dict>
+		<key>7546C018D710AA1D48FCD2812802EEF92B788E1E</key>
+		<string>github.com:valarman/xzy.git</string>
+	</dict>
+	<key>IDESourceControlProjectPath</key>
+	<string>Приморский.xcodeproj</string>
+	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
+	<dict>
+		<key>7546C018D710AA1D48FCD2812802EEF92B788E1E</key>
+		<string>../..</string>
+	</dict>
+	<key>IDESourceControlProjectURL</key>
+	<string>github.com:valarman/xzy.git</string>
+	<key>IDESourceControlProjectVersion</key>
+	<integer>111</integer>
+	<key>IDESourceControlProjectWCCIdentifier</key>
+	<string>7546C018D710AA1D48FCD2812802EEF92B788E1E</string>
+	<key>IDESourceControlProjectWCConfigurations</key>
+	<array>
+		<dict>
+			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
+			<string>public.vcs.git</string>
+			<key>IDESourceControlWCCIdentifierKey</key>
+			<string>7546C018D710AA1D48FCD2812802EEF92B788E1E</string>
+			<key>IDESourceControlWCCName</key>
+			<string>xzy</string>
+		</dict>
+	</array>
+</dict>
+</plist>
