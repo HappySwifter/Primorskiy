@@ -19,7 +19,10 @@
 #import "NSDate+HumanizedTime.h"
 #import "NewsDetailsVC.h"
 
-@interface MasterViewController () <MWFeedParserDelegate> {
+#import "ASOXScrollTableViewCell.h"
+#import "XScrollViewCell.h"
+
+@interface MasterViewController () <MWFeedParserDelegate, ASOXScrollTableViewCellDelegate> {
     MWFeedParser *feedParser;
     NSDateFormatter *formatter;
 
@@ -32,6 +35,7 @@
 @end
 
 @implementation MasterViewController {
+    NSArray *_mainNewsArray;
 
 }
 
@@ -40,6 +44,7 @@
     [super viewDidLoad];
     self.title = @"Приморский край";
 //    self.navigationController.hidesBarsOnSwipe = YES;
+    _mainNewsArray = @[@"a560a403af585e84365d6a2241138272.jpg", @"a560a403af585e84365d6a2241138272.jpg", @"a560a403af585e84365d6a2241138272.jpg", @"a560a403af585e84365d6a2241138272.jpg", @"a560a403af585e84365d6a2241138272.jpg", @"a560a403af585e84365d6a2241138272.jpg"];
     self.parsedItems = [[NSMutableArray alloc]init];
     self.newsToShow = [[NSMutableArray alloc]init];
 
@@ -75,35 +80,54 @@
 #pragma mark - Table View
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
-    return 1;
+    return 2;
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
-    return [self.newsToShow count];;
+    if (section == 0) {
+        return 1;
+    } else {
+        return [self.newsToShow count];;
+    }
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-    NewsTableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"Cell" forIndexPath:indexPath];
-    [self configureCell:cell atIndexPath:indexPath];
     
-    if (indexPath.row > [self.newsToShow count] - 2) {
-        [self loadNext];
+    if (indexPath.section == 0) {
+        ASOXScrollTableViewCell *cell = [ASOXScrollTableViewCell tableView:tableView cellForRowInTableViewIndexPath:indexPath withReusableCellIdentifier:MAINNEWSCELL delegate:self];
+        return cell;
+    } else {
+        NewsTableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"Cell" forIndexPath:indexPath];
+        
+        
+        [self configureCell:cell atIndexPath:indexPath];
+        
+        if (indexPath.row > [self.newsToShow count] - 2) {
+            [self loadNext];
+        }
+        return cell;
     }
-    return cell;
+
 }
 
-- (BOOL)tableView:(UITableView *)tableView canEditRowAtIndexPath:(NSIndexPath *)indexPath {
-    // Return NO if you do not want the specified item to be editable.
-    return YES;
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
+    if (indexPath.section == 0) {
+        return 210;
+    } else {
+        return 102;
+    }
 }
 
 - (void)tableView:(UITableView *)tableView willDisplayCell:(UITableViewCell *)cell forRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    NewsTableViewCell *newsCell = (NewsTableViewCell *)cell;
-    newsCell.newsImageView.transform = CGAffineTransformMakeScale(0.8, 0.8);
-    [UIView animateWithDuration:0.3 animations:^{
-        newsCell.newsImageView.transform = CGAffineTransformMakeScale(1, 1);
-    }];
+    if (indexPath.section == 1) {
+        NewsTableViewCell *newsCell = (NewsTableViewCell *)cell;
+        newsCell.newsImageView.transform = CGAffineTransformMakeScale(0.8, 0.8);
+        [UIView animateWithDuration:0.3 animations:^{
+            newsCell.newsImageView.transform = CGAffineTransformMakeScale(1, 1);
+        }];
+    }
+   
 }
 
 - (void)configureCell:(NewsTableViewCell *)cell atIndexPath:(NSIndexPath *)indexPath {
@@ -149,27 +173,7 @@
 }
 
 
-- (NSString *)fixDateWithTimeZone:(NSDate *)newsDate {
-//    NSString *dateStr = @"2012-07-16 07:33:01";
-//    NSDateFormatter *dateFormatter1 = [[NSDateFormatter alloc] init];
-//    [dateFormatter1 setDateFormat:@"yyyy-MM-dd HH:mm:ss"];
-//    NSDate *date = newsDate;
-//    NSLog(@"date : %@",newsDate);
-//    NSTimeZone *currentTimeZone = [NSTimeZone localTimeZone];
-//    NSTimeZone *utcTimeZone = [NSTimeZone timeZoneWithAbbreviation:@"UTC"];
-//    NSInteger currentGMTOffset = [currentTimeZone secondsFromGMTForDate:date];
-//    NSInteger gmtOffset = [utcTimeZone secondsFromGMTForDate:date];
-//    NSTimeInterval gmtInterval = currentGMTOffset - gmtOffset;
-    
-    NSDate *destinationDate = [[NSDate alloc] initWithTimeInterval:TIMEZONEDIFF sinceDate:newsDate];
-    NSDateFormatter *dateFormatters = [[NSDateFormatter alloc] init];
-    [dateFormatters setDateFormat:@"dd-MMM-yyyy hh:mm"];
-    [dateFormatters setDateStyle:NSDateFormatterShortStyle];
-    [dateFormatters setTimeStyle:NSDateFormatterShortStyle];
-    [dateFormatters setDoesRelativeDateFormatting:YES];
-    [dateFormatters setTimeZone:[NSTimeZone systemTimeZone]];
-    return [dateFormatters stringFromDate: destinationDate];
-}
+
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     [self performSegueWithIdentifier:@"ShowDetailsSegue" sender:indexPath];
@@ -279,4 +283,63 @@
     }
 }
 
+- (NSString *)fixDateWithTimeZone:(NSDate *)newsDate {
+    //    NSString *dateStr = @"2012-07-16 07:33:01";
+    //    NSDateFormatter *dateFormatter1 = [[NSDateFormatter alloc] init];
+    //    [dateFormatter1 setDateFormat:@"yyyy-MM-dd HH:mm:ss"];
+    //    NSDate *date = newsDate;
+    //    NSLog(@"date : %@",newsDate);
+    //    NSTimeZone *currentTimeZone = [NSTimeZone localTimeZone];
+    //    NSTimeZone *utcTimeZone = [NSTimeZone timeZoneWithAbbreviation:@"UTC"];
+    //    NSInteger currentGMTOffset = [currentTimeZone secondsFromGMTForDate:date];
+    //    NSInteger gmtOffset = [utcTimeZone secondsFromGMTForDate:date];
+    //    NSTimeInterval gmtInterval = currentGMTOffset - gmtOffset;
+    
+    NSDate *destinationDate = [[NSDate alloc] initWithTimeInterval:TIMEZONEDIFF sinceDate:newsDate];
+    NSDateFormatter *dateFormatters = [[NSDateFormatter alloc] init];
+    [dateFormatters setDateFormat:@"dd-MMM-yyyy hh:mm"];
+    [dateFormatters setDateStyle:NSDateFormatterShortStyle];
+    [dateFormatters setTimeStyle:NSDateFormatterShortStyle];
+    [dateFormatters setDoesRelativeDateFormatting:YES];
+    [dateFormatters setTimeZone:[NSTimeZone systemTimeZone]];
+    return [dateFormatters stringFromDate: destinationDate];
+}
+
+#pragma mark - ASOXScrollTableViewCellDelegate
+
+- (NSInteger)horizontalScrollContentsView:(UICollectionView *)horizontalScrollContentsView numberOfItemsInTableViewIndexPath:(NSIndexPath *)tableViewIndexPath {
+    
+    // Return the number of items in each category to be displayed on each ASOXScrollTableViewCell object
+    return [_mainNewsArray count];
+}
+
+- (UICollectionViewCell *)horizontalScrollContentsView:(UICollectionView *)horizontalScrollContentsView cellForItemAtContentIndexPath:(NSIndexPath *)contentIndexPath inTableViewIndexPath:(NSIndexPath *)tableViewIndexPath {
+    
+    
+    XScrollViewCell *cell = (XScrollViewCell *)[horizontalScrollContentsView dequeueReusableCellWithReuseIdentifier:@"XScrollViewCell" forIndexPath:contentIndexPath];
+    
+    UIImage *articleImageName = [UIImage imageNamed:[_mainNewsArray objectAtIndex:contentIndexPath.item]];
+    
+//    NSArray *colors = @[[UIColor redColor], [UIColor blueColor], [UIColor orangeColor], [UIColor greenColor]];
+//    
+//    UIColor *color = colors[arc4random() %4];
+    
+    cell.articleImage.image = articleImageName;
+//    cell.articleImage.backgroundColor = color;
+    return cell;
+}
+
+- (void)horizontalScrollContentsView:(UICollectionView *)horizontalScrollContentsView didSelectItemAtContentIndexPath:(NSIndexPath *)contentIndexPath inTableViewIndexPath:(NSIndexPath *)tableViewIndexPath {
+    
+    [horizontalScrollContentsView deselectItemAtIndexPath:contentIndexPath animated:YES]; // A custom behaviour in this example for removing highlight from the cell immediately after it had been selected
+    
+    NSLog(@"Section %ld Row %ld Item %ld is selected", (unsigned long)tableViewIndexPath.section, (unsigned long)tableViewIndexPath.row, (unsigned long)contentIndexPath.item);
+}
+
 @end
+
+
+
+
+
+

@@ -23,3 +23,6 @@
 
 
 
+#pragma mark - cell identifiers
+
+#define MAINNEWSCELL @"MainNewsCell"

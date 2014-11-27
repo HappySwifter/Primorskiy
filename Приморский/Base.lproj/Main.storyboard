@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="6250" systemVersion="14B25" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" initialViewController="RMx-3f-FxP">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="6221" systemVersion="14A389" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" initialViewController="RMx-3f-FxP">
     <dependencies>
-        <deployment identifier="iOS"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="6244"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="6213"/>
         <capability name="Alignment constraints with different attributes" minToolsVersion="5.1"/>
         <capability name="Constraints to layout margins" minToolsVersion="6.0"/>
     </dependencies>
@@ -41,7 +40,7 @@
                                         <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" ambiguous="YES" misplaced="YES" text="Label" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="dhu-IJ-QmI">
                                             <rect key="frame" x="152" y="8" width="434" height="55"/>
                                             <fontDescription key="fontDescription" name="HelveticaNeue" family="Helvetica Neue" pointSize="13"/>
-                                            <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
+                                            <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
                                             <nil key="highlightedColor"/>
                                         </label>
                                         <imageView userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" ambiguous="YES" translatesAutoresizingMaskIntoConstraints="NO" id="CKc-au-dxV">
@@ -66,7 +65,7 @@
                                                 <constraint firstAttribute="height" constant="13" id="99Z-gx-CRI"/>
                                             </constraints>
                                             <fontDescription key="fontDescription" name="HelveticaNeue-Light" family="Helvetica Neue" pointSize="13"/>
-                                            <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
+                                            <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
                                             <nil key="highlightedColor"/>
                                             <variation key="default">
                                                 <mask key="constraints">
@@ -106,11 +105,11 @@
                                             <exclude reference="Tii-LD-isk"/>
                                         </mask>
                                         <mask key="constraints">
+                                            <exclude reference="6vM-Gc-R4E"/>
+                                            <exclude reference="X8Y-sA-QCC"/>
                                             <exclude reference="2Qy-RF-5L1"/>
                                             <exclude reference="ALn-gi-wCc"/>
                                             <exclude reference="tqj-GZ-aMc"/>
-                                            <exclude reference="6vM-Gc-R4E"/>
-                                            <exclude reference="X8Y-sA-QCC"/>
                                             <exclude reference="Vpr-dY-rqV"/>
                                             <exclude reference="Wsh-ij-rH0"/>
                                             <exclude reference="qmj-Tf-Tc8"/>
@@ -125,11 +124,11 @@
                                             <include reference="Tii-LD-isk"/>
                                         </mask>
                                         <mask key="constraints">
+                                            <include reference="6vM-Gc-R4E"/>
+                                            <include reference="X8Y-sA-QCC"/>
                                             <include reference="2Qy-RF-5L1"/>
                                             <include reference="ALn-gi-wCc"/>
                                             <include reference="tqj-GZ-aMc"/>
-                                            <include reference="6vM-Gc-R4E"/>
-                                            <include reference="X8Y-sA-QCC"/>
                                             <include reference="Vpr-dY-rqV"/>
                                             <include reference="Wsh-ij-rH0"/>
                                             <include reference="qmj-Tf-Tc8"/>
@@ -147,6 +146,13 @@
                                     <outlet property="newsImageView" destination="CKc-au-dxV" id="iuj-Fu-WIp"/>
                                     <outlet property="titleLabel" destination="dhu-IJ-QmI" id="PbS-RO-xPv"/>
                                 </connections>
+                            </tableViewCell>
+                            <tableViewCell contentMode="scaleToFill" selectionStyle="default" indentationWidth="10" reuseIdentifier="MainNewsCell" rowHeight="210" id="HSL-0q-NSX" customClass="ASOXScrollTableViewCell">
+                                <rect key="frame" x="0.0" y="0.0" width="320" height="44"/>
+                                <autoresizingMask key="autoresizingMask"/>
+                                <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="HSL-0q-NSX" id="ilD-du-R7V">
+                                    <autoresizingMask key="autoresizingMask"/>
+                                </tableViewCellContentView>
                             </tableViewCell>
                         </prototypes>
                         <sections/>
@@ -184,9 +190,6 @@
                                     <subviews>
                                         <imageView userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="30F-c3-tYJ">
                                             <rect key="frame" x="0.0" y="0.0" width="240" height="128"/>
-                                            <variation key="heightClass=regular-widthClass=compact" misplaced="YES">
-                                                <rect key="frame" x="8" y="8" width="384" height="209"/>
-                                            </variation>
                                         </imageView>
                                         <activityIndicatorView opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" style="gray" translatesAutoresizingMaskIntoConstraints="NO" id="KRc-ke-UUs">
                                             <rect key="frame" x="-10" y="-10" width="20" height="20"/>
@@ -243,11 +246,8 @@
                                         <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="DeQ-Bt-Zgv" customClass="TTTAttributedLabel">
                                             <rect key="frame" x="0.0" y="-21" width="42" height="21"/>
                                             <fontDescription key="fontDescription" type="system" pointSize="17"/>
-                                            <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
+                                            <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
                                             <nil key="highlightedColor"/>
-                                            <variation key="heightClass=regular-widthClass=compact" misplaced="YES">
-                                                <rect key="frame" x="8" y="8" width="384" height="72"/>
-                                            </variation>
                                         </label>
                                     </subviews>
                                     <constraints>
@@ -355,6 +355,7 @@
                         <viewControllerLayoutGuide type="bottom" id="Aid-iv-qAh"/>
                     </layoutGuides>
                     <view key="view" contentMode="scaleToFill" id="oux-CK-RJh">
+                        <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="4RL-L4-G55">
