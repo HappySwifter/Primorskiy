@@ -39,7 +39,7 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     self.title = @"Приморский край";
-    self.navigationController.hidesBarsOnSwipe = YES;
+//    self.navigationController.hidesBarsOnSwipe = YES;
     self.parsedItems = [[NSMutableArray alloc]init];
     self.newsToShow = [[NSMutableArray alloc]init];
 
@@ -57,8 +57,12 @@
     
     self.hud = [[MBProgressHUD alloc]initWithView:self.view];
     
-//    [self downloadAndParseData];
-    [self loadNext];
+    if (TESTDATA) {
+        [self loadNext];
+    } else {
+        [self downloadAndParseData];
+    }
+    
 }
 
 - (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(NSIndexPath *)sender {
@@ -93,7 +97,14 @@
     return YES;
 }
 
-
+- (void)tableView:(UITableView *)tableView willDisplayCell:(UITableViewCell *)cell forRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    NewsTableViewCell *newsCell = (NewsTableViewCell *)cell;
+    newsCell.newsImageView.transform = CGAffineTransformMakeScale(0.8, 0.8);
+    [UIView animateWithDuration:0.3 animations:^{
+        newsCell.newsImageView.transform = CGAffineTransformMakeScale(1, 1);
+    }];
+}
 
 - (void)configureCell:(NewsTableViewCell *)cell atIndexPath:(NSIndexPath *)indexPath {
     
@@ -104,24 +115,60 @@
         NSString *itemTitle = item.title ? [item.title stringByConvertingHTMLToPlainText] : @"Без заголовка";
         
         if (item.date) {
-            NSString *dateStr =[item.date stringWithHumanizedTimeDifference:NSDateHumanizedSuffixAgo withFullString:NO];
-            cell.dateLabel.text = dateStr;
+//            cell.dateLabel.text = [NSString stringWithFormat:@"%@", item.date];
+//           NSString *dateStrr = [self fixDate:item.date];
+//            NSString *dateStr =[item.date stringWithHumanizedTimeDifference:NSDateHumanizedSuffixAgo withFullString:NO];
+            cell.dateLabel.text = [self fixDateWithTimeZone:item.date];
+
         } else {
             cell.dateLabel.text = @"";
         }
-        
-        
-        
-        
+
         // Set
         cell.titleLabel.text = itemTitle;
         
         
         if ([item.imageURL length]) {
             NSURL *imageURL = [NSURL URLWithString:item.imageURL];
-            [cell.newsImageView setImageWithURL:imageURL];
+            cell.newsImageView.hidden = YES;
+            [cell.loadingIndicator startAnimating];
+            cell.loadingIndicator.tintColor = [UIColor orangeColor];
+            cell.loadingIndicator.hidesWhenStopped = YES;
+            [cell.newsImageView setImageWithURLRequest:[NSURLRequest requestWithURL:imageURL] placeholderImage:nil success:^(NSURLRequest *request, NSHTTPURLResponse *response, UIImage *image) {
+                [cell.loadingIndicator stopAnimating];
+                cell.newsImageView.image = image;
+                cell.newsImageView.hidden = NO;
+                
+            } failure:^(NSURLRequest *request, NSHTTPURLResponse *response, NSError *error) {
+                [cell.loadingIndicator stopAnimating];
+                cell.newsImageView.image = [UIImage imageNamed:@"error_image"];
+                cell.newsImageView.hidden = NO;
+            }];
         }
     }
+}
+
+
+- (NSString *)fixDateWithTimeZone:(NSDate *)newsDate {
+//    NSString *dateStr = @"2012-07-16 07:33:01";
+//    NSDateFormatter *dateFormatter1 = [[NSDateFormatter alloc] init];
+//    [dateFormatter1 setDateFormat:@"yyyy-MM-dd HH:mm:ss"];
+//    NSDate *date = newsDate;
+//    NSLog(@"date : %@",newsDate);
+//    NSTimeZone *currentTimeZone = [NSTimeZone localTimeZone];
+//    NSTimeZone *utcTimeZone = [NSTimeZone timeZoneWithAbbreviation:@"UTC"];
+//    NSInteger currentGMTOffset = [currentTimeZone secondsFromGMTForDate:date];
+//    NSInteger gmtOffset = [utcTimeZone secondsFromGMTForDate:date];
+//    NSTimeInterval gmtInterval = currentGMTOffset - gmtOffset;
+    
+    NSDate *destinationDate = [[NSDate alloc] initWithTimeInterval:TIMEZONEDIFF sinceDate:newsDate];
+    NSDateFormatter *dateFormatters = [[NSDateFormatter alloc] init];
+    [dateFormatters setDateFormat:@"dd-MMM-yyyy hh:mm"];
+    [dateFormatters setDateStyle:NSDateFormatterShortStyle];
+    [dateFormatters setTimeStyle:NSDateFormatterShortStyle];
+    [dateFormatters setDoesRelativeDateFormatting:YES];
+    [dateFormatters setTimeZone:[NSTimeZone systemTimeZone]];
+    return [dateFormatters stringFromDate: destinationDate];
 }
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
@@ -175,7 +222,7 @@
     
     if ((!self.isLoading) && ([self.newsToShow count] < [self countRowinDB])) {
         self.isLoading = YES;
-        NSEntityDescription *entityDescription = [NSEntityDescription entityForName:NewsEntity inManagedObjectContext:self.managedObjectContext];
+        NSEntityDescription *entityDescription = [NSEntityDescription entityForName:CommonNewsEntity inManagedObjectContext:self.managedObjectContext];
         NSFetchRequest *request = [[NSFetchRequest alloc] init];
         [request setEntity:entityDescription];
         NSSortDescriptor *sortDescriptor = [[NSSortDescriptor alloc]
@@ -221,7 +268,7 @@
 
 - (int)countRowinDB {
     NSFetchRequest *request = [[NSFetchRequest alloc] init];
-    [request setEntity:[NSEntityDescription entityForName:NewsEntity inManagedObjectContext:self.managedObjectContext]];
+    [request setEntity:[NSEntityDescription entityForName:CommonNewsEntity inManagedObjectContext:self.managedObjectContext]];
     NSError *error;
    int count = [self.managedObjectContext countForFetchRequest:request error:&error];
     if (!error) {

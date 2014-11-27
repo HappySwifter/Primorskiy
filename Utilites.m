@@ -22,7 +22,7 @@
     AppDelegate *appDelegate = [UIApplication sharedApplication].delegate;
     
     NSManagedObjectContext *moc = appDelegate.managedObjectContext;
-    NSEntityDescription *entityDescription = [NSEntityDescription entityForName:NewsEntity inManagedObjectContext:moc];
+    NSEntityDescription *entityDescription = [NSEntityDescription entityForName:CommonNewsEntity inManagedObjectContext:moc];
     
     NSFetchRequest *request = [[NSFetchRequest alloc] init];
     [request setEntity:entityDescription];
@@ -65,7 +65,7 @@
 + (void)insertNewFeedItem:(MWFeedItem *)feedItem inMOC:(id)moc {
     
     NSManagedObjectContext *manCont = moc;
-    News *news = [NSEntityDescription insertNewObjectForEntityForName:NewsEntity inManagedObjectContext:manCont];
+    News *news = [NSEntityDescription insertNewObjectForEntityForName:CommonNewsEntity inManagedObjectContext:manCont];
     
     if (feedItem.title) {
         news.title = feedItem.title;
