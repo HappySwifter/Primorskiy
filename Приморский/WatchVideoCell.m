@@ -1,14 +1,14 @@
 //
-//  DetailsImageCell.m
+//  WatchVideoCell.m
 //  Приморский
 //
-//  Created by iosdev on 26.11.14.
+//  Created by iosdev on 27.11.14.
 //  Copyright (c) 2014 J&L. All rights reserved.
 //
 
-#import "DetailsImageCell.h"
+#import "WatchVideoCell.h"
 
-@implementation DetailsImageCell
+@implementation WatchVideoCell
 
 - (void)awakeFromNib {
     // Initialization code

@@ -52,7 +52,7 @@
         
         
         if ([element content]) {
-            [self.newsContent addObject:[element content]];
+            [self insertTextTOArray:[element content]];
 //            NSLog(@"element 0 content %@", [element content]);
         } else if ([[element tagName] isEqualToString:@"img"]) {
             [self insertImageURLToArray:[element attributes][@"src"]];
@@ -61,7 +61,7 @@
             for (TFHppleElement *elementt in [element children]) {
                 
                 if ([elementt content]) {
-                    [self.newsContent addObject:[elementt content]];
+                    [self insertTextTOArray:[elementt content]];
 //                    NSLog(@"element 1 content %@", [elementt content]);
                 } else if ([[elementt tagName] isEqualToString:@"img"]) {
                      [self insertImageURLToArray:[elementt attributes][@"src"]];
@@ -70,7 +70,7 @@
                      for (TFHppleElement *elementtt in [elementt children]) {
                      
                          if ([elementtt content]) {
-                             [self.newsContent addObject:[elementtt content]];
+                             [self insertTextTOArray:[elementtt content]];
 //                             NSLog(@"element 2 content %@", [elementtt content]);
                          } else if ([[elementtt tagName] isEqualToString:@"img"]) {
 //                             NSLog(@"image 2 = %@", [elementtt attributes][@"src"]);
@@ -78,7 +78,7 @@
                          } else {
                              for (TFHppleElement *elementttt in [elementtt children]) {
                                  if ([elementttt content]) {
-                                     [self.newsContent addObject:[elementttt content]];
+                                     [self insertTextTOArray:[elementttt content]];
 //                                     NSLog(@"element 3 content %@", [elementttt content]);
                                  } else if ([[elementttt tagName] isEqualToString:@"img"]) {
 //                                     NSLog(@"image 3 = %@", [elementttt attributes][@"src"]);
@@ -102,7 +102,16 @@
     [self.newsContent addObject:imageURL];
 }
 
+- (void)insertTextTOArray:(NSString *)text {
+    
+    // TODO replace пробел/новая строка на пустоту
+    if ([text length] > 1) {
+        [self.newsContent addObject:text];
 
+    } else {
+        
+    }
+}
 
 
 - (void)didReceiveMemoryWarning {
@@ -123,9 +132,12 @@
         
         DetailsImageCell *cell = [tableView dequeueReusableCellWithIdentifier:@"ImageCell" forIndexPath:indexPath];
         cell.detailsImageView.hidden = YES;
-        cell.loadingIndicator.hidden = NO;
+        [cell.loadingIndicator startAnimating];
+        cell.loadingIndicator.tintColor = [UIColor blueColor];
+        cell.loadingIndicator.hidesWhenStopped = YES;
+
         [cell.detailsImageView setImageWithURLRequest:[NSURLRequest requestWithURL:item] placeholderImage:nil success:^(NSURLRequest *request, NSHTTPURLResponse *response, UIImage *image) {
-            cell.loadingIndicator.hidden = YES;
+            [cell.loadingIndicator stopAnimating];
             cell.detailsImageView.hidden = NO;
             cell.detailsImageView.image = image;
         } failure:^(NSURLRequest *request, NSHTTPURLResponse *response, NSError *error) {
