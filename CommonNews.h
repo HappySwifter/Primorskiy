@@ -1,8 +1,8 @@
 //
-//  News.h
+//  CommonNews.h
 //  Приморский
 //
-//  Created by iosdev on 26.11.14.
+//  Created by iosdev on 28.11.14.
 //  Copyright (c) 2014 J&L. All rights reserved.
 //
 
@@ -10,9 +10,8 @@
 #import <CoreData/CoreData.h>
 
 
-@interface News : NSManagedObject
+@interface CommonNews : NSManagedObject
 
-@property (nonatomic, retain) NSNumber * attribute;
 @property (nonatomic, retain) NSDate * date;
 @property (nonatomic, retain) NSString * imageURL;
 @property (nonatomic, retain) NSString * subtitle;

@@ -1,21 +1,20 @@
 //
-//  News.m
+//  MainNews.m
 //  Приморский
 //
-//  Created by iosdev on 26.11.14.
+//  Created by iosdev on 28.11.14.
 //  Copyright (c) 2014 J&L. All rights reserved.
 //
 
-#import "News.h"
+#import "MainNews.h"
 
 
-@implementation News
+@implementation MainNews
 
-@dynamic attribute;
 @dynamic date;
 @dynamic imageURL;
-@dynamic subtitle;
 @dynamic title;
 @dynamic websiteLink;
+@dynamic subtitle;
 
 @end

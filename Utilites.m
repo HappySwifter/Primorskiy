@@ -8,15 +8,16 @@
 
 #import "Utilites.h"
 #import "AppDelegate.h"
-#import "Constants.h"
-#import "News.h"
+#import "CommonNews.h"
 
 @implementation Utilites
 
 
 
 
-+ (void)addUniqueNewsToDataBase:(NSArray *)downloadedNews {
++ (void)addUniqueCommonNewsToDataBase:(NSArray *)downloadedNews {
+    
+
     
     // LOADING LAST NEWS FROM DATA BASE
     AppDelegate *appDelegate = [UIApplication sharedApplication].delegate;
@@ -41,31 +42,58 @@
         // if DB is empty - save all new data to DB
         
         for (MWFeedItem *item in downloadedNews) {
-            [Utilites insertNewFeedItem:item inMOC:moc];
+            [Utilites insertNewFeedItem:item inMOC:moc forEntity:CommonNewsEntity];
         }
         [appDelegate saveContext];
         
     } else {
         if ([lastDBEntry count]) {
-            News *news = [lastDBEntry firstObject];
+            CommonNews *news = [lastDBEntry firstObject];
             NSDate *lastDBEntryDate = news.date;
             
             for (MWFeedItem *downloadedNew in downloadedNews) {
                 if (news.date && ([lastDBEntryDate compare:downloadedNew.date] == NSOrderedAscending)) {
                     NSLog(@"to DB added new entry with publishing date: %@ /n", downloadedNew.date);
-                    [Utilites insertNewFeedItem:downloadedNew inMOC:moc];
+                    [Utilites insertNewFeedItem:downloadedNew inMOC:moc forEntity:CommonNewsEntity];
                 }
             }
             [appDelegate saveContext];
         }
-        
     }
 }
 
-+ (void)insertNewFeedItem:(MWFeedItem *)feedItem inMOC:(id)moc {
+
++ (void)updateCommonNewsInDataBase:(NSArray *)downloadedNews {
+    
+    AppDelegate *appDelegate = [UIApplication sharedApplication].delegate;
+    NSManagedObjectContext *moc = appDelegate.managedObjectContext;
+    
+    NSFetchRequest * allMainNews = [[NSFetchRequest alloc] init];
+    [allMainNews setEntity:[NSEntityDescription entityForName:MainNewsEntity inManagedObjectContext:moc]];
+    [allMainNews setIncludesPropertyValues:NO]; //only fetch the managedObjectID
+    NSError * error = nil;
+    NSArray * mainNews = [moc executeFetchRequest:allMainNews error:&error];
+    
+    //error handling goes here
+    for (NSManagedObject * news in mainNews) {
+        [moc deleteObject:news];
+    }
+    [appDelegate saveContext];
+    
+    for (MWFeedItem *downloadedNew in downloadedNews) {
+        [Utilites insertNewFeedItem:downloadedNew inMOC:moc forEntity:MainNewsEntity];
+    }
+    [appDelegate saveContext];
+
+}
+
+
+
+
++ (void)insertNewFeedItem:(MWFeedItem *)feedItem inMOC:(id)moc forEntity:(NSString *)entity {
     
     NSManagedObjectContext *manCont = moc;
-    News *news = [NSEntityDescription insertNewObjectForEntityForName:CommonNewsEntity inManagedObjectContext:manCont];
+    CommonNews *news = [NSEntityDescription insertNewObjectForEntityForName:entity inManagedObjectContext:manCont];
     
     if (feedItem.title) {
         news.title = feedItem.title;

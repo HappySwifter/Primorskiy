@@ -9,7 +9,6 @@
 #import "MasterViewController.h"
 #import "AppDelegate.h"
 #import "MWFeedParser.h"
-#import "News.h"
 #import "NSString+HTML.h"
 #import "Constants.h"
 #import "MBProgressHUD.h"
@@ -22,20 +21,29 @@
 #import "ASOXScrollTableViewCell.h"
 #import "XScrollViewCell.h"
 
+#import "CommonNews.h"
+#import "MainNews.h"
+
 @interface MasterViewController () <MWFeedParserDelegate, ASOXScrollTableViewCellDelegate> {
-    MWFeedParser *feedParser;
+    
     NSDateFormatter *formatter;
 
 }
+@property (nonatomic, strong) MWFeedParser *mainNewsFeedParser;
+@property (nonatomic, strong) MWFeedParser *commonNewsFeedParser;
+
 @property (nonatomic, strong) AppDelegate *appDelegate;
-@property (nonatomic, strong) NSMutableArray *parsedItems;
+@property (nonatomic, strong) NSMutableArray *parsedCommonNews;
+@property (nonatomic, strong) NSMutableArray *parsedMainNews;
+
+
+@property (nonatomic, strong) NSMutableArray *mainNewsToShow;
 @property (nonatomic, strong) NSMutableArray *newsToShow;
 @property (nonatomic, strong) MBProgressHUD *hud;
 @property (nonatomic) BOOL isLoading;
 @end
 
 @implementation MasterViewController {
-    NSArray *_mainNewsArray;
 
 }
 
@@ -44,9 +52,10 @@
     [super viewDidLoad];
     self.title = @"Приморский край";
 //    self.navigationController.hidesBarsOnSwipe = YES;
-    _mainNewsArray = @[@"a560a403af585e84365d6a2241138272.jpg", @"a560a403af585e84365d6a2241138272.jpg", @"a560a403af585e84365d6a2241138272.jpg", @"a560a403af585e84365d6a2241138272.jpg", @"a560a403af585e84365d6a2241138272.jpg", @"a560a403af585e84365d6a2241138272.jpg"];
-    self.parsedItems = [[NSMutableArray alloc]init];
+    self.parsedCommonNews = [[NSMutableArray alloc]init];
+    self.parsedMainNews = [[NSMutableArray alloc]init];
     self.newsToShow = [[NSMutableArray alloc]init];
+    self.mainNewsToShow = [[NSMutableArray alloc]init];
 
     self.appDelegate = [UIApplication sharedApplication].delegate;
     self.managedObjectContext = self.appDelegate.managedObjectContext;
@@ -62,11 +71,9 @@
     
     self.hud = [[MBProgressHUD alloc]initWithView:self.view];
     
-    if (TESTDATA) {
-        [self loadNext];
-    } else {
-        [self downloadAndParseData];
-    }
+    
+    [self downloadAndParseNews];
+
     
 }
 
@@ -107,7 +114,6 @@
         }
         return cell;
     }
-
 }
 
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
@@ -132,7 +138,7 @@
 
 - (void)configureCell:(NewsTableViewCell *)cell atIndexPath:(NSIndexPath *)indexPath {
     
-    News *item = [self.newsToShow objectAtIndex:indexPath.row];
+    CommonNews *item = [self.newsToShow objectAtIndex:indexPath.row];
     if (item) {
         
         // Process
@@ -192,14 +198,26 @@
 
 - (void)feedParser:(MWFeedParser *)parser didParseFeedItem:(MWFeedItem *)item {
 //    NSLog(@"Parsed Feed Item: “%@”", item.title);
-    if (item) [self.parsedItems addObject:item];
+    if (parser == self.mainNewsFeedParser) {
+        if (item) [self.parsedMainNews addObject:item];
+    }
+    if (parser == self.commonNewsFeedParser) {
+        if (item) [self.parsedCommonNews addObject:item];
+    }
 }
 
 - (void)feedParserDidFinish:(MWFeedParser *)parser {
     NSLog(@"Finished Parsing%@", (parser.stopped ? @" (Stopped)" : @""));
-    [self.hud hide:YES];
-    [Utilites addUniqueNewsToDataBase:self.parsedItems];
-    [self loadNext];
+    if (parser == self.mainNewsFeedParser) {
+        [Utilites updateCommonNewsInDataBase:self.parsedMainNews];
+        [self showMainNews];
+    }
+    
+    if (parser == self.commonNewsFeedParser) {
+        [self.hud hide:YES];
+        [Utilites addUniqueCommonNewsToDataBase:self.parsedCommonNews];
+        [self loadNext];
+    }
 }
 
 - (void)feedParser:(MWFeedParser *)parser didFailWithError:(NSError *)error {
@@ -207,16 +225,32 @@
     [self loadNext];
     [self.hud hide:YES];
 
-    if (self.parsedItems.count == 0) {
-    } else {
-        // Failed but some items parsed, so show and inform of error
-        UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Parsing Incomplete"
-                                                        message:@"There was an error during the parsing of this feed. Not all of the feed items could parsed."
-                                                       delegate:nil
-                                              cancelButtonTitle:@"Dismiss"
-                                              otherButtonTitles:nil];
-        [alert show];
+    if (parser == self.mainNewsFeedParser) {
+        if (self.parsedMainNews.count == 0) {
+        } else {
+            // Failed but some items parsed, so show and inform of error
+            UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Parsing main mews Incomplete"
+                                                            message:@"There was an error during the parsing of this feed. Not all of the feed items could parsed."
+                                                           delegate:nil
+                                                  cancelButtonTitle:@"Dismiss"
+                                                  otherButtonTitles:nil];
+            [alert show];
+        }
     }
+    
+    if (parser == self.commonNewsFeedParser) {
+        if (self.parsedCommonNews.count == 0) {
+        } else {
+            // Failed but some items parsed, so show and inform of error
+            UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Parsing common mews Incomplete"
+                                                            message:@"There was an error during the parsing of this feed. Not all of the feed items could parsed."
+                                                           delegate:nil
+                                                  cancelButtonTitle:@"Dismiss"
+                                                  otherButtonTitles:nil];
+            [alert show];
+        }
+    }
+    
 }
 
 
@@ -245,32 +279,62 @@
 
 }
 
-- (void)downloadAndParseData {
-    [self.hud show:YES];
-    NSURL *feedURL = [NSURL URLWithString:CommonNewsURL];
-    feedParser = [[MWFeedParser alloc] initWithFeedURL:feedURL];
-    feedParser.delegate = self;
-    feedParser.feedParseType = ParseTypeFull; // Parse feed info and all items
-    feedParser.connectionType = ConnectionTypeAsynchronously;
-    [feedParser parse];
+- (void)showMainNews
+{
+    NSEntityDescription *entityDescription = [NSEntityDescription entityForName:MainNewsEntity inManagedObjectContext:self.managedObjectContext];
+    NSFetchRequest *request = [[NSFetchRequest alloc] init];
+    [request setEntity:entityDescription];
+    NSSortDescriptor *sortDescriptor = [[NSSortDescriptor alloc]
+                                        initWithKey:@"date" ascending:NO];
+    [request setSortDescriptors:@[sortDescriptor]];
+    
+    NSError *error;
+    NSArray *news = [self.managedObjectContext executeFetchRequest:request error:&error];
+    [self.mainNewsToShow addObjectsFromArray:news];
+    NSLog(@"loaded news from DB. Count: %i", [self.mainNewsToShow count]);
+    NSIndexSet *indexSet = [NSIndexSet indexSetWithIndex:0];
+    [self.tableView reloadSections:indexSet withRowAnimation:UITableViewRowAnimationRight];
+    [self.tableView reloadData];
 }
+
+- (void)downloadAndParseNews {
+    [self.hud show:YES];
+
+    NSURL *mainNewsFeedURL = [NSURL URLWithString:MainNewsURL];
+    self.mainNewsFeedParser = [[MWFeedParser alloc] initWithFeedURL:mainNewsFeedURL];
+    self.mainNewsFeedParser.delegate = self;
+    self.mainNewsFeedParser.feedParseType = ParseTypeFull; // Parse feed info and all items
+    self.mainNewsFeedParser.connectionType = ConnectionTypeAsynchronously;
+    [self.mainNewsFeedParser parse];
+
+    
+    NSURL *commonNewsFeedURL = [NSURL URLWithString:CommonNewsURL];
+    self.commonNewsFeedParser = [[MWFeedParser alloc] initWithFeedURL:commonNewsFeedURL];
+    self.commonNewsFeedParser.delegate = self;
+    self.commonNewsFeedParser.feedParseType = ParseTypeFull; // Parse feed info and all items
+    self.commonNewsFeedParser.connectionType = ConnectionTypeAsynchronously;
+    [self.commonNewsFeedParser parse];
+}
+
 
 - (void)refreshAction {
     [self.refreshControl endRefreshing];
     [self clear];
-    [self downloadAndParseData];
     [self.tableView reloadData];
+    [self downloadAndParseNews];
 }
 
 
 - (void)clear {
-    [self.parsedItems removeAllObjects];
+    [self.parsedMainNews removeAllObjects];
+    [self.parsedCommonNews removeAllObjects];
     [self.newsToShow removeAllObjects];
+    [self.mainNewsToShow removeAllObjects];
 }
 
 
 
-- (int)countRowinDB {
+- (int)countRowinDB { // чтобы не пытаться грузить новости которых нет
     NSFetchRequest *request = [[NSFetchRequest alloc] init];
     [request setEntity:[NSEntityDescription entityForName:CommonNewsEntity inManagedObjectContext:self.managedObjectContext]];
     NSError *error;
@@ -310,21 +374,24 @@
 - (NSInteger)horizontalScrollContentsView:(UICollectionView *)horizontalScrollContentsView numberOfItemsInTableViewIndexPath:(NSIndexPath *)tableViewIndexPath {
     
     // Return the number of items in each category to be displayed on each ASOXScrollTableViewCell object
-    return [_mainNewsArray count];
+    return [self.mainNewsToShow count];
 }
 
 - (UICollectionViewCell *)horizontalScrollContentsView:(UICollectionView *)horizontalScrollContentsView cellForItemAtContentIndexPath:(NSIndexPath *)contentIndexPath inTableViewIndexPath:(NSIndexPath *)tableViewIndexPath {
     
     
     XScrollViewCell *cell = (XScrollViewCell *)[horizontalScrollContentsView dequeueReusableCellWithReuseIdentifier:@"XScrollViewCell" forIndexPath:contentIndexPath];
+ 
+    MainNews *news = [self.mainNewsToShow objectAtIndex:contentIndexPath.item];
+
     
-    UIImage *articleImageName = [UIImage imageNamed:[_mainNewsArray objectAtIndex:contentIndexPath.item]];
+    [cell.articleImage setImageWithURLRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:news.imageURL]] placeholderImage:nil success:^(NSURLRequest *request, NSHTTPURLResponse *response, UIImage *image) {
+        cell.articleImage.image = image;
+    } failure:^(NSURLRequest *request, NSHTTPURLResponse *response, NSError *error) {
+        
+    }];
     
-//    NSArray *colors = @[[UIColor redColor], [UIColor blueColor], [UIColor orangeColor], [UIColor greenColor]];
-//    
-//    UIColor *color = colors[arc4random() %4];
     
-    cell.articleImage.image = articleImageName;
 //    cell.articleImage.backgroundColor = color;
     return cell;
 }

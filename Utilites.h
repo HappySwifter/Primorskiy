@@ -8,9 +8,10 @@
 
 #import <Foundation/Foundation.h>
 #import "MWFeedItem.h"
-
+#import "Constants.h"
 @interface Utilites : NSObject
 
-+ (void)addUniqueNewsToDataBase:(NSArray *)downloadedNews;
-+ (void)insertNewFeedItem:(MWFeedItem *)feedItem inMOC:(id)moc;
++ (void)addUniqueCommonNewsToDataBase:(NSArray *)downloadedNews;
++ (void)updateCommonNewsInDataBase:(NSArray *)downloadedNews;
+//+ (void)insertNewFeedItem:(MWFeedItem *)feedItem inMOC:(id)moc forEntity:(NSString *)entity;
 @end

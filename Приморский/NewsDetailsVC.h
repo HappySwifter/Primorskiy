@@ -7,9 +7,9 @@
 //
 
 #import <UIKit/UIKit.h>
-#import "News.h"
+#import "CommonNews.h"
 @interface NewsDetailsVC : UITableViewController
 
-@property (nonatomic, strong) News *news;
+@property (nonatomic, strong) CommonNews *news;
 
 @end
