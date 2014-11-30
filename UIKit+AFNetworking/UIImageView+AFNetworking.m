@@ -21,7 +21,7 @@
 // THE SOFTWARE.
 
 #import "UIImageView+AFNetworking.h"
-
+#import "Utilites.h"
 #import <objc/runtime.h>
 
 #if defined(__IPHONE_OS_VERSION_MIN_REQUIRED)
@@ -145,20 +145,53 @@
         self.af_imageRequestOperation = [[AFHTTPRequestOperation alloc] initWithRequest:urlRequest];
         self.af_imageRequestOperation.responseSerializer = self.imageResponseSerializer;
         [self.af_imageRequestOperation setCompletionBlockWithSuccess:^(AFHTTPRequestOperation *operation, id responseObject) {
+            
+            
+
+            
             __strong __typeof(weakSelf)strongSelf = weakSelf;
             if ([[urlRequest URL] isEqual:[strongSelf.af_imageRequestOperation.request URL]]) {
-                if (success) {
-                    success(urlRequest, operation.response, responseObject);
-                } else if (responseObject) {
-                    strongSelf.image = responseObject;
-                }
+                
+                
+                
+                dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+                    
+                    UIImage *downlImage = responseObject;
+                    
+                    NSData *imgData = UIImageJPEGRepresentation(downlImage, 0);
+                    if (([imgData length] > 15000)) {
+                        
+                        UIImage *newImage = [Utilites imageWithImage:downlImage scaledToSize:CGSizeMake(130, 85)];
+                        downlImage = newImage;
+                    }
+                    
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        
+                        if (success) {
+                            success(urlRequest, operation.response, downlImage);
+                        } else if (downlImage) {
+                            strongSelf.image = downlImage;
+                        }
+                        
+                        if (operation == strongSelf.af_imageRequestOperation){
+                            strongSelf.af_imageRequestOperation = nil;
+                        }
+                        [[[strongSelf class] sharedImageCache] cacheImage:downlImage forRequest:urlRequest];
 
-                if (operation == strongSelf.af_imageRequestOperation){
-                        strongSelf.af_imageRequestOperation = nil;
-                }
+                        
+                    });
+                    
+                    
+                });
+                
+                
+                
             }
+            
 
-            [[[strongSelf class] sharedImageCache] cacheImage:responseObject forRequest:urlRequest];
+            
+            
+            
         } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
             __strong __typeof(weakSelf)strongSelf = weakSelf;
             if ([[urlRequest URL] isEqual:[strongSelf.af_imageRequestOperation.request URL]]) {

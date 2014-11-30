@@ -10,7 +10,7 @@
 #import "MWFeedParser.h"
 #import "MWFeedParser_Private.h"
 #import "Constants.h"
-
+#import "SDImageCache.h"
 @interface AppDelegate () <MWFeedParserDelegate>
 
 @end
@@ -20,12 +20,23 @@
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     // Override point for customization after application launch.
-
+    
+   SDImageCache *c = [SDImageCache sharedImageCache];
+    NSLog(@"image cache size %i", [c getSize]);
+    NSLog(@"image cache count %i", [c getDiskCount]);
+//    [c clearDisk];
+    
+    
+//    [[SDImageCache sharedImageCache] setValue:nil forKey:@"memCache"];
+    
     
     [application setMinimumBackgroundFetchInterval:UIApplicationBackgroundFetchIntervalMinimum];
     NSLog(@"Launched in background %d", UIApplicationStateBackground == application.applicationState);
     
     NSLog(@"Documents directory %@",[[NSBundle mainBundle] URLForResource:@"MainModel" withExtension:@"momd"]);
+    
+    NSLog(@"INITIALISATION DONE");
+    
     return YES;
     
 }

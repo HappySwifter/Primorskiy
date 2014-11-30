@@ -13,7 +13,7 @@
 #import "Constants.h"
 #import "MBProgressHUD.h"
 #import "Utilites.h"
-#import "UIImageView+AFNetworking.h"
+//#import "UIImageView+AFNetworking.h"
 #import "NewsTableViewCell.h"
 #import "NSDate+HumanizedTime.h"
 #import "NewsDetailsVC.h"
@@ -24,7 +24,10 @@
 #import "CommonNews.h"
 #import "MainNews.h"
 
-@interface MasterViewController () <MWFeedParserDelegate, ASOXScrollTableViewCellDelegate> {
+#import <SDWebImage/UIImageView+WebCache.h>
+
+
+@interface MasterViewController () <MWFeedParserDelegate, ASOXScrollTableViewCellDelegate, SDWebImageManagerDelegate> {
     
     NSDateFormatter *formatter;
 
@@ -41,6 +44,12 @@
 @property (nonatomic, strong) NSMutableArray *newsToShow;
 @property (nonatomic, strong) MBProgressHUD *hud;
 @property (nonatomic) BOOL isLoading;
+
+@property (nonatomic, strong) SDWebImageManager *imageManager;
+
+@property (nonatomic) BOOL dragging;
+@property (nonatomic) CGPoint lastContentOffset;
+
 @end
 
 @implementation MasterViewController {
@@ -51,7 +60,12 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     self.title = @"Приморский край";
+    
+    self.imageManager = [SDWebImageManager sharedManager];
+    self.imageManager.delegate = self;
+    
 //    self.navigationController.hidesBarsOnSwipe = YES;
+    self.tabBarController.hidesBottomBarWhenPushed = YES;
     self.parsedCommonNews = [[NSMutableArray alloc]init];
     self.parsedMainNews = [[NSMutableArray alloc]init];
     self.newsToShow = [[NSMutableArray alloc]init];
@@ -94,7 +108,15 @@
     if (section == 0) {
         return 1;
     } else {
-        return [self.newsToShow count];;
+        //
+//        if ([self.newsToShow count]) {
+//            return 3;
+//        }
+//        else {
+//            return 0;
+//        }
+        //
+        return [self.newsToShow count];
     }
 }
 
@@ -126,18 +148,21 @@
 
 - (void)tableView:(UITableView *)tableView willDisplayCell:(UITableViewCell *)cell forRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    if (indexPath.section == 1) {
-        NewsTableViewCell *newsCell = (NewsTableViewCell *)cell;
-        newsCell.newsImageView.transform = CGAffineTransformMakeScale(0.8, 0.8);
-        [UIView animateWithDuration:0.3 animations:^{
-            newsCell.newsImageView.transform = CGAffineTransformMakeScale(1, 1);
-        }];
-    }
+//    if (indexPath.section == 1) {
+//        NewsTableViewCell *newsCell = (NewsTableViewCell *)cell;
+//        newsCell.newsImageView.transform = CGAffineTransformMakeScale(0.8, 0.8);
+//        [UIView animateWithDuration:0.3 animations:^{
+//            newsCell.newsImageView.transform = CGAffineTransformMakeScale(1, 1);
+//        }];
+//    }
    
 }
 
 - (void)configureCell:(NewsTableViewCell *)cell atIndexPath:(NSIndexPath *)indexPath {
+
     
+    
+
     CommonNews *item = [self.newsToShow objectAtIndex:indexPath.row];
     if (item) {
         
@@ -157,22 +182,28 @@
         // Set
         cell.titleLabel.text = itemTitle;
         
-        
+
         if ([item.imageURL length]) {
             NSURL *imageURL = [NSURL URLWithString:item.imageURL];
+            
+            
             cell.newsImageView.hidden = YES;
             [cell.loadingIndicator startAnimating];
             cell.loadingIndicator.tintColor = [UIColor orangeColor];
             cell.loadingIndicator.hidesWhenStopped = YES;
-            [cell.newsImageView setImageWithURLRequest:[NSURLRequest requestWithURL:imageURL] placeholderImage:nil success:^(NSURLRequest *request, NSHTTPURLResponse *response, UIImage *image) {
+            
+            [self.imageManager downloadImageWithURL:imageURL options:0 progress:^(NSInteger receivedSize, NSInteger expectedSize) {
+            } completed:^(UIImage *image, NSError *error, SDImageCacheType cacheType, BOOL finished, NSURL *imageURL) {
+                if (image) {
+                    cell.newsImageView.image = image;
+                    cell.newsImageView.hidden = NO;
+                } else {
+                    NSLog(@"image download error: %@", error.description);
+                    cell.newsImageView.image = [UIImage imageNamed:@"error_image"];
+                    cell.newsImageView.hidden = NO;
+                }
                 [cell.loadingIndicator stopAnimating];
-                cell.newsImageView.image = image;
-                cell.newsImageView.hidden = NO;
                 
-            } failure:^(NSURLRequest *request, NSHTTPURLResponse *response, NSError *error) {
-                [cell.loadingIndicator stopAnimating];
-                cell.newsImageView.image = [UIImage imageNamed:@"error_image"];
-                cell.newsImageView.hidden = NO;
             }];
         }
     }
@@ -294,7 +325,15 @@
     NSLog(@"loaded news from DB. Count: %i", [self.mainNewsToShow count]);
     NSIndexSet *indexSet = [NSIndexSet indexSetWithIndex:0];
     [self.tableView reloadSections:indexSet withRowAnimation:UITableViewRowAnimationRight];
-    [self.tableView reloadData];
+    
+    NSURL *commonNewsFeedURL = [NSURL URLWithString:CommonNewsURL];
+    self.commonNewsFeedParser = [[MWFeedParser alloc] initWithFeedURL:commonNewsFeedURL];
+    self.commonNewsFeedParser.delegate = self;
+    self.commonNewsFeedParser.feedParseType = ParseTypeFull; // Parse feed info and all items
+    self.commonNewsFeedParser.connectionType = ConnectionTypeAsynchronously;
+    [self.commonNewsFeedParser parse];
+    
+//    [self.tableView reloadData];
 }
 
 - (void)downloadAndParseNews {
@@ -308,12 +347,7 @@
     [self.mainNewsFeedParser parse];
 
     
-    NSURL *commonNewsFeedURL = [NSURL URLWithString:CommonNewsURL];
-    self.commonNewsFeedParser = [[MWFeedParser alloc] initWithFeedURL:commonNewsFeedURL];
-    self.commonNewsFeedParser.delegate = self;
-    self.commonNewsFeedParser.feedParseType = ParseTypeFull; // Parse feed info and all items
-    self.commonNewsFeedParser.connectionType = ConnectionTypeAsynchronously;
-    [self.commonNewsFeedParser parse];
+   
 }
 
 
@@ -330,6 +364,13 @@
     [self.parsedCommonNews removeAllObjects];
     [self.newsToShow removeAllObjects];
     [self.mainNewsToShow removeAllObjects];
+    
+    
+//    SDImageCache *c = [SDImageCache sharedImageCache];
+//    [c clearDisk];
+//    [c clearMemory];
+//    [c cleanDisk];
+//    NSLog(@"cleanes disk");
 }
 
 
@@ -348,17 +389,6 @@
 }
 
 - (NSString *)fixDateWithTimeZone:(NSDate *)newsDate {
-    //    NSString *dateStr = @"2012-07-16 07:33:01";
-    //    NSDateFormatter *dateFormatter1 = [[NSDateFormatter alloc] init];
-    //    [dateFormatter1 setDateFormat:@"yyyy-MM-dd HH:mm:ss"];
-    //    NSDate *date = newsDate;
-    //    NSLog(@"date : %@",newsDate);
-    //    NSTimeZone *currentTimeZone = [NSTimeZone localTimeZone];
-    //    NSTimeZone *utcTimeZone = [NSTimeZone timeZoneWithAbbreviation:@"UTC"];
-    //    NSInteger currentGMTOffset = [currentTimeZone secondsFromGMTForDate:date];
-    //    NSInteger gmtOffset = [utcTimeZone secondsFromGMTForDate:date];
-    //    NSTimeInterval gmtInterval = currentGMTOffset - gmtOffset;
-    
     NSDate *destinationDate = [[NSDate alloc] initWithTimeInterval:TIMEZONEDIFF sinceDate:newsDate];
     NSDateFormatter *dateFormatters = [[NSDateFormatter alloc] init];
     [dateFormatters setDateFormat:@"dd-MMM-yyyy hh:mm"];
@@ -368,6 +398,9 @@
     [dateFormatters setTimeZone:[NSTimeZone systemTimeZone]];
     return [dateFormatters stringFromDate: destinationDate];
 }
+
+
+
 
 #pragma mark - ASOXScrollTableViewCellDelegate
 
@@ -385,14 +418,22 @@
     MainNews *news = [self.mainNewsToShow objectAtIndex:contentIndexPath.item];
 
     
-    [cell.articleImage setImageWithURLRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:news.imageURL]] placeholderImage:nil success:^(NSURLRequest *request, NSHTTPURLResponse *response, UIImage *image) {
-        cell.articleImage.image = image;
-    } failure:^(NSURLRequest *request, NSHTTPURLResponse *response, NSError *error) {
-        
+    cell.articleImage.hidden = YES;
+    
+    [self.imageManager downloadImageWithURL:[NSURL URLWithString:news.imageURL] options:0 progress:^(NSInteger receivedSize, NSInteger expectedSize) {
+    } completed:^(UIImage *image, NSError *error, SDImageCacheType cacheType, BOOL finished, NSURL *imageURL) {
+        if (image) {
+
+            cell.articleImage.image = image;
+            cell.articleImage.hidden = NO;
+
+        } else {
+            cell.articleImage.hidden = NO;
+            NSLog(@"image download error: %@", error.description);
+        }
     }];
     
     
-//    cell.articleImage.backgroundColor = color;
     return cell;
 }
 
@@ -403,10 +444,152 @@
     NSLog(@"Section %ld Row %ld Item %ld is selected", (unsigned long)tableViewIndexPath.section, (unsigned long)tableViewIndexPath.row, (unsigned long)contentIndexPath.item);
 }
 
+
+#pragma mark - SDWebImageView delegate
+
+- (UIImage *)imageManager:(SDWebImageManager *)imageManager transformDownloadedImage:(UIImage *)image withURL:(NSURL *)imageURL
+{
+    
+    if ([[UIScreen mainScreen] respondsToSelector:@selector(displayLinkWithTarget:selector:)] &&
+        ([UIScreen mainScreen].scale == 2.0)) { // check for retina
+        if (image.size.width > 260 && image.size.height > 170) {
+            return [Utilites imageWithImage:image scaledToSize:CGSizeMake(260, 170)];
+        }
+    } else {
+        if (image.size.width > 130 && image.size.height > 85) {
+            return [Utilites imageWithImage:image scaledToSize:CGSizeMake(130, 85)];
+        }
+    }
+    return image;
+}
+
+
+
+
+#pragma mark - tab bar manipulations
+
+- (void)scrollViewWillBeginDragging:(UIScrollView *)scrollView
+{
+    _dragging=YES;
+}
+
+- (void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView
+{
+    _dragging=NO;
+}
+
+
+- (void)scrollViewDidScroll:(UIScrollView *)scrollView {
+//    if ([scrollView isKindOfClass:[UITableView class]] && self.navigationController.visibleViewController == self) {
+//        
+//        CGPoint currentOffset = scrollView.contentOffset;
+//        if (currentOffset.y > 0 && _dragging) {
+//            if (currentOffset.y < _lastContentOffset.y)
+//            {
+//                
+//                CGRect screenRect = [[UIScreen mainScreen] bounds];
+//                float fHeight = screenRect.size.height - self.tabBarController.tabBar.frame.size.height;
+//
+//                if (self.tabBarController.tabBar.frame.origin.y >= fHeight) {
+//                    [self showTabBar];
+//                }
+//            }
+//            else
+//            {
+//                CGRect screenRect = [[UIScreen mainScreen] bounds];
+//                float fHeight = screenRect.size.height;
+//                if (self.tabBarController.tabBar.frame.origin.y <= fHeight) {
+//                    [self hideTabBar];
+//                }
+//            }
+//            _lastContentOffset = currentOffset;
+//        }
+//    }
+}
+
+
+
+
+- (IBAction)SettingsTouched:(id)sender {
+    
+//    [UIView animateWithDuration:0.3 animations:^{
+//        [self.tabBarController.tabBar setHidden:!self.tabBarController.tabBar.isHidden];
+//
+//    }];
+    
+    CATransition *animation = [CATransition animation];
+    [animation setType:kCATransitionFade];
+    [[self.view.window layer] addAnimation:animation forKey:@"layerAnimation"];
+    [self.tabBarController.tabBar setHidden:!self.tabBarController.tabBar.isHidden];
+
+//    self.tabBarController.tabBar.isHidden ? [self showTabBar] : [self hideTabBar];
+    
+    
+    
+    
+    
+    
+}
+
+
+
+
+- (void) hideTabBar
+{
+    CGRect screenRect = [[UIScreen mainScreen] bounds];
+    
+    [UIView beginAnimations:nil context:NULL];
+    [UIView setAnimationDuration:0.5];
+    float fHeight = screenRect.size.height;
+    if(  UIDeviceOrientationIsLandscape([UIApplication sharedApplication].statusBarOrientation) )
+    {
+        fHeight = screenRect.size.width;
+    }
+    
+    for(UIView *view in self.view.subviews)
+    {
+        if([view isKindOfClass:[UITabBar class]])
+        {
+            [view setFrame:CGRectMake(view.frame.origin.x, fHeight, view.frame.size.width, view.frame.size.height)];
+        }
+        else
+        {
+            [view setFrame:CGRectMake(view.frame.origin.x, view.frame.origin.y, view.frame.size.width, fHeight)];
+            view.backgroundColor = [UIColor blackColor];
+        }
+    }
+    [UIView commitAnimations];
+}
+
+
+
+- (void) showTabBar
+{
+    CGRect screenRect = [[UIScreen mainScreen] bounds];
+    float fHeight = screenRect.size.height - self.tabBarController.tabBar.frame.size.height;
+    
+    if(  UIDeviceOrientationIsLandscape([UIApplication sharedApplication].statusBarOrientation) )
+    {
+        fHeight = screenRect.size.width - self.tabBarController.tabBar.frame.size.height;
+    }
+    
+    [UIView beginAnimations:nil context:NULL];
+    [UIView setAnimationDuration:0.5];
+    for(UIView *view in self.view.subviews)
+    {
+        if([view isKindOfClass:[UITabBar class]])
+        {
+            [view setFrame:CGRectMake(view.frame.origin.x, fHeight, view.frame.size.width, view.frame.size.height)];
+        }
+        else
+        {
+            [view setFrame:CGRectMake(view.frame.origin.x, view.frame.origin.y, view.frame.size.width, fHeight)];
+        }
+    }
+    [UIView commitAnimations];
+}
+
+#pragma mark - Actions
+
+
 @end
-
-
-
-
-
-
